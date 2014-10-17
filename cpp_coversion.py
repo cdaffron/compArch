@@ -25,7 +25,7 @@ parser.add_argument('associativity', type=int)
 parser.add_argument('hit_time', type=int)
 parser.add_argument('miss_time', type=int)
 parser.add_argument('LRU', type=bool)
-parser.add_argumnet('file_name', type=string)
+parser.add_argument('file_name', type=str)
 args = parser.parse_args()
 
 bsize = args.block_size
@@ -52,16 +52,17 @@ setShift = math.log(nSets, 2)
 if(debug == 1):
     print 'bsize: ' + str(bsize) + '\nnSets: ' + str(nSets)
 
-cache = [temp]
 temp = entry()
+cache = [temp]
 for i in range(nblocks):
+    temp = entry()
     cache.append(temp)
 
 addr = 0
 for line in infile:
     addr = int(line, base=16)
     if(debug == 1):
-        print 'Addr: 0x' + hex(addr)
+        print 'Addr: ' + hex(addr)
     nreads += 1
     found = False
     setAddr = ( addr / bsize ) % nSets
@@ -75,7 +76,7 @@ for line in infile:
     
     for i in range(startBlock, endBlock + 1):
         if(cache[i].valid == 1):
-            if(cache[i].tag == (addr >> (wordShift + setShift))):
+            if(cache[i].tag == (addr >> int(wordShift + setShift))):
                 if(debug == 1):
                     print 'Data found in block: ' + str(i)
                 cache[i].lastAccess = time.time()
@@ -89,9 +90,10 @@ for line in infile:
                 if(debug == 1):
                     print 'Empty block found at ' + str(i)
                 cache[i].valid = 1
-                cache[i].tag = (addr >> (wordShift + setShift))
+                cache[i].tag = (addr >> int(wordShift + setShift))
                 cache[i].lastAccess = time.time()
                 found = True
+                nmisses += 1
                 break
     
     if(found == False):
@@ -112,7 +114,7 @@ for line in infile:
             if(debug == 1):
                 print 'Oldest block, data stored at ' + str(oldest)
             cache[oldest].valid = 1
-            cache[oldest].tag = (addr >> (wordShift + setShift))
+            cache[oldest].tag = (addr >> int(wordShift + setShift))
             cache[oldest].lastAccess = time.time()
             nmisses += 1
     
