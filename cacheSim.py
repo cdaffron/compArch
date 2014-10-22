@@ -180,7 +180,7 @@ for line in infile:
     #####################
 
     # Logic for finding address in L2 cache.
-    if(L1found == False && L2found == False):
+    if(L1found == False and L2found == False):
         for i in range(L2startBlock, L2endBlock + 1):
             # If block valid bit is set, test to see if tag matches address.
             # If match, update block access time.
@@ -194,7 +194,7 @@ for line in infile:
                     break
     
     # Logic for finding empty block to place address.
-    if(L1found == False && L2found == False):
+    if(L1found == False and L2found == False):
         for i in range(L2startBlock, L2endBlock + 1):
             # If empty block found, set valid bit, set tag, set last access time.
             if(L2cache[i].valid == 0):
@@ -212,7 +212,7 @@ for line in infile:
     #####################
 
     # Logic for finding address in L3 cache.
-    if(L1found == False && L2found == False && L3found == False):
+    if(L1found == False and L2found == False and L3found == False):
         for i in range(L3startBlock, L3endBlock + 1):
             # If block valid bit is set, test to see if tag matches address.
             # If match, update block access time.
@@ -226,7 +226,7 @@ for line in infile:
                     break
     
     # Logic for finding empty block to place address.
-    if(L1found == False && L2found == False && L3found == False):
+    if(L1found == False and L2found == False and L3found == False):
         for i in range(L3startBlock, L3endBlock + 1):
             # If empty block found, set valid bit, set tag, set last access time.
             if(L3cache[i].valid == 0):
