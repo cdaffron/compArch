@@ -124,8 +124,11 @@ for line in infile:
     if( debug == 1 ):
         print 'L1 Min Addr: ' + hex(L1minAddr) + ' Max Addr: ' + hex(L1maxAddr)
         print 'L1 Set Addr: ' + hex(L1setAddr)
-    
+
+    # Logic for finding address in L1 cache.
     for i in range(L1startBlock, L1endBlock + 1):
+        # If line valid bit is set, test to see if tag matches address.
+        # If match, update block access time.
         if(L1cache[i].valid == 1):
             if(L1cache[i].tag == (L1addr >> int(L1wordShift + L1setShift))):
                 if(debug == 1):
@@ -134,9 +137,11 @@ for line in infile:
                 L1found = True
                 L1nHits += 1
                 break
-                
+    
+    # Logic for finding empty block to place address.
     if(L1found == False):
         for i in range(L1startBlock, L1endBlock + 1):
+            # If empty block found, set valid bit, set tag, set last access time.
             if(L1cache[i].valid == 0):
                 if(debug == 1):
                     print 'Empty L1 block found at ' + str(i)
@@ -146,10 +151,12 @@ for line in infile:
                 L1found = True
                 L1nMisses += 1
                 break
-                
+    # Logic for replacing LRU block with address.
     if(L1found == False):
         oldest = L1startBlock
         oldTime = L1cache[L1startBlock].lastAccess
+        # Loop through all blocks in set and find oldest address.
+        # Replace with curr address, set valid bit, set last access time.
         for i in range(L1startBlock + 1, L1endBlock + 1):
             if(L1cache[i].lastAccess < oldTime):
                 oldTime = L1cache[i].lastAccess
