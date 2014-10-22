@@ -15,6 +15,9 @@ parser.add_argument('--L2', nargs=4, type=int, required=False, metavar=('block_s
 parser.add_argument('--L3', nargs=4, type=int, required=False, metavar=('block_size','num_lines','associativity','hit_time'), help='L3 cache parameters')
 parser.add_argument('write_time', type=int)
 parser.add_argument('file_name', type=str)
+group = parser.add_mutually_exclusive_group(required=True)
+group.add_argument('--WB', action='store_true')
+group.add_argument('--WT', action='store_true')
 args = parser.parse_args()
 
 #print args
@@ -51,12 +54,15 @@ L1assoc = args.L1[2]
 L1nReads = 0
 L1nHits = 0
 L1nMisses = 0
+L1nWrites = 0
 L2nReads = 0
 L2nHits = 0
 L2nMisses = 0
+L2nWrites = 0
 L3nReads = 0
 L3nHits = 0
 L3nMisses = 0
+L3nWrites = 0
 fname = args.file_name
 if( args.L2 ):
     numLevels = 2
@@ -134,25 +140,25 @@ if( numLevels == 3 ):
         temp = entry()
         L3cache.append(temp)
     
-L1addr = 0
+#L1addr = 0
 type = ''
 for line in infile:
     separate = line.split()
-    L1addr = int(separate[0], base=16)
+    addr = int(separate[0], base=16)
     type = str(separate[1])
     if( debug == 1 ):
-        print 'Addr: ' + hex(L1addr)
+        print 'Addr: ' + hex(addr)
     
     if( type == 'R' ):
         L1nReads += 1
         L1found = False
         L2found = False
         L3found = False
-        L1setAddr = ( ( L1addr >> byteShift ) / L1bSize ) % L1nSets
+        L1setAddr = ( ( addr >> int(byteShift) ) / L1bSize ) % L1nSets
         L1startBlock = L1setAddr * L1setSize
         L1endBlock = ( L1setAddr + 1 ) * L1setSize - 1
-        L1minAddr = ( L1addr - ( L1addr % L1bSize ) )
-        L1maxAddr = ( L1addr + ( L1bSize - L1addr % L1bSize ) - 1 )
+        L1minAddr = ( addr - ( addr % L1bSize ) )
+        L1maxAddr = ( addr + ( L1bSize - addr % L1bSize ) - 1 )
         if( debug == 1 ):
             print 'L1 Min Addr: ' + hex(L1minAddr) + ' Max Addr: ' + hex(L1maxAddr)
             print 'L1 Set Addr: ' + hex(L1setAddr)
@@ -160,11 +166,11 @@ for line in infile:
         # These are mainly notes for my brain :)
         # Program flow:
         # Look for existing in L1
-        # If not, look for empty in L1
         # If not, look for existing in L2
-        # If not, look for empty in L2
         # If not, look for existing in L3
-        # If not, look for empty in L3
+        # If not, look for empty in L3 then do LRU
+        # If not, look for empty in L2 then do LRU
+        # If not, look for empty in L1 then do LRU
         # If not...
         # LRU write to L3
         # LRU write to L2
@@ -179,7 +185,7 @@ for line in infile:
             # If block valid bit is set, test to see if tag matches address.
             # If match, update block access time.
             if(L1cache[i].valid == 1):
-                if(L1cache[i].tag == (L1addr >> int(L1wordShift + L1setShift + byteShift))):
+                if(L1cache[i].tag == (addr >> int(L1wordShift + L1setShift + byteShift))):
                     if(debug == 1):
                         print 'Data found in L1 block: ' + str(i)
                     L1cache[i].lastAccess = time.time()
@@ -193,12 +199,13 @@ for line in infile:
         
         # Logic for finding address in L2 cache.
         if( numLevels >= 2 ):
-            if(L1found == False and L2found == False):
-                L2setAddr = ( addr / L2bSize ) % L2nSets
+            if( L1found == False ):
+                L2nReads += 1
+                L2setAddr = ( ( addr >> int(byteShift) ) / L2bSize ) % L2nSets
                 L2startBlock = L2setAddr * L2setSize
                 L2endBlock = ( L2setAddr + 1 ) * L2setSize - 1
-                L2minAddr = ( L2addr - ( L2addr % L2bSize ) )
-                L2maxAddr = ( L2addr + ( L2bSize - L2addr % L2bSize ) - 1 )
+                L2minAddr = ( addr - ( addr % L2bSize ) )
+                L2maxAddr = ( addr + ( L2bSize - addr % L2bSize ) - 1 )
                 if( debug == 1 ):
                     print 'Heading into L2, address not found in L1 Cache'
                     print 'L2 Min Addr: ' + hex(L2minAddr) + ' Max Addr: ' + hex(L2maxAddr)
@@ -207,7 +214,7 @@ for line in infile:
                     # If block valid bit is set, test to see if tag matches address.
                     # If match, update block access time.
                     if(L2cache[i].valid == 1):
-                        if(L2cache[i].tag == (L1addr >> int(L1wordShift + L1setShift + byteShift))):
+                        if(L2cache[i].tag == (addr >> int(L2wordShift + L2setShift + byteShift))):
                             if(debug == 1):
                                 print 'Data found in L2 block: ' + str(i)
                             L2cache[i].lastAccess = time.time()
@@ -221,12 +228,13 @@ for line in infile:
                             
         # Logic for finding address in L3 cache.
         if( numLevels == 3 ):
-            if(L1found == False and L2found == False and L3found == False):
-                L3setAddr = ( addr / L3bSize ) % L3nSets
+            if( L1found == False and L2found == False ):
+                L3nReads += 1
+                L3setAddr = ( ( addr >> int(byteShift) ) / L3bSize ) % L3nSets
                 L3startBlock = L3setAddr * L3setSize
                 L3endBlock = ( L3setAddr + 1 ) * L3setSize - 1
-                L3minAddr = ( L3addr - ( L3addr % L3bSize ) )
-                L3maxAddr = ( L3addr + ( L3bSize - L3addr % L3bSize ) - 1 )
+                L3minAddr = ( addr - ( addr % L3bSize ) )
+                L3maxAddr = ( addr + ( L3bSize - addr % L3bSize ) - 1 )
                 if( debug == 1 ):
                     print 'Heading into L3, address not found in L3 Cache'
                     print 'L3 Min Addr: ' + hex(L3minAddr) + ' Max Addr: ' + hex(L3maxAddr)
@@ -235,7 +243,7 @@ for line in infile:
                     # If block valid bit is set, test to see if tag matches address.
                     # If match, update block access time.
                     if(L3cache[i].valid == 1):
-                        if(L3cache[i].tag == (L1addr >> int(L1wordShift + L1setShift + byteShift))):
+                        if(L3cache[i].tag == (addr >> int(L3wordShift + L3setShift + byteShift))):
                             if(debug == 1):
                                 print 'Data found in L3 block: ' + str(i)
                             L3cache[i].lastAccess = time.time()
@@ -255,11 +263,28 @@ for line in infile:
                         if(debug == 1):
                             print 'Empty L3 block found at ' + str(i)
                         L3cache[i].valid = 1
-                        L3cache[i].tag = (L1addr >> int(L1wordShift + L1setShift + byteShift))
+                        L3cache[i].tag = (addr >> int(L3wordShift + L3setShift + byteShift))
                         L3cache[i].lastAccess = time.time()
                         L3found = True
                         L3nMisses += 1
                         break
+                ## Add LRU here
+                if( L3found == False ):
+                    oldest = L3startBlock
+                    oldTime = L3cache[L3startBlock].lastAccess
+                    # Loop through all blocks in the set and find oldest address.
+                    # Replace with current address, set valid bit, set last access time
+                    for i in range( L3startBlock + 1, L3endBlock + 1 ):
+                        if( L3cache[i].lastAccess < oldTime ):
+                            oldTime = L3cache[i].lastAccess
+                            oldest = i
+                    if( debug == 1 ):
+                        print 'Oldest L3 block found, data stored at: ' + str(oldest)
+                    L3cache[oldest].valid = 1
+                    L3cache[oldest].tag = (addr >> int( L3wordShift + L3setShift + byteShift ) )
+                    L3cache[oldest].lastAccess = time.time()
+                    L3nMisses += 1
+                    L3found = True
 
         ############################
         # L2 Cache Empty Placement #
@@ -274,11 +299,27 @@ for line in infile:
                         if(debug == 1):
                             print 'Empty L2 block found at ' + str(i)
                         L2cache[i].valid = 1
-                        L2cache[i].tag = (L1addr >> int(L1wordShift + L1setShift))
+                        L2cache[i].tag = (addr >> int(L2wordShift + L2setShift + byteShift))
                         L2cache[i].lastAccess = time.time()
                         L2found = True
                         L2nMisses += 1
                         break
+                if( L2found == False ):
+                    oldest = L2startBlock
+                    oldTime = L2cache[L2startBlock].lastAccess
+                    # Loop through all blocks in the set and find oldest address.
+                    # Replace with current address, set valid bit, set last access time
+                    for i in range( L2startBlock + 1, L2endBlock + 1 ):
+                        if( L2cache[i].lastAccess < oldTime ):
+                            oldTime = L2cache[i].lastAccess
+                            oldest = i
+                    if( debug == 1 ):
+                        print 'Oldest L2 block found, data stored at: ' + str(oldest)
+                    L2cache[oldest].valid = 1
+                    L2cache[oldest].tag = ( addr >> int( L2wordShift + L2setShift + byteShift ) )
+                    L2cache[oldest].lastAccess = time.time()
+                    L2nMisses += 1
+                    L2found = True
 
         ############################
         # L1 Cache Empty Placement #
@@ -292,32 +333,33 @@ for line in infile:
                     if(debug == 1):
                         print 'Empty L1 block found at ' + str(i)
                     L1cache[i].valid = 1
-                    L1cache[i].tag = (L1addr >> int(L1wordShift + L1setShift + byteShift))
+                    L1cache[i].tag = (addr >> int(L1wordShift + L1setShift + byteShift))
                     L1cache[i].lastAccess = time.time()
                     L1found = True
                     L1nMisses += 1
                     break
+            if( L1found == False ):
+                oldest = L1startBlock
+                oldTime = L1cache[L1startBlock].lastAccess
+                # Loop through all blocks in the set and find oldest address.
+                # Replace with current address, set valid bit, set last access time
+                for i in range( L1startBlock + 1, L1endBlock + 1 ):
+                    if( L1cache[i].lastAccess < oldTime ):
+                        oldTime = L1cache[i].lastAccess
+                        oldest = i
+                    if( debug == 1 ):
+                        print 'Oldest L1 block found, data stored at: ' + str(oldest)
+                    L1cache[oldest].valid = 1
+                    L1cache[oldest].tag = ( addr >> int( L1wordShift + L1setShift + byteShift ) )
+                    L1cache[oldest].lastAccess = time.time()
+                    L1nMisses += 1
+                    L1found = True
 
     ############# 
     # LRU Write #
     #############
     if( type == 'W' ):
-        # Logic for replacing LRU block with address.
-        if(L1found == False):
-            oldest = L1startBlock
-            oldTime = L1cache[L1startBlock].lastAccess
-            # Loop through all blocks in set and find oldest address.
-            # Replace with curr address, set valid bit, set last access time.
-            for i in range(L1startBlock + 1, L1endBlock + 1):
-                if(L1cache[i].lastAccess < oldTime):
-                    oldTime = L1cache[i].lastAccess
-                    oldest = i
-            if(debug == 1):
-                print 'Oldest L1 block, data stored at: ' + str(oldest)
-            L1cache[oldest].valid = 1
-            L1cache[oldest].tag = (L1addr >> int(L1wordShift + L1setShift + byteShift))
-            L1cache[oldest].lastAccess = time.time()
-            L1nMisses += 1
+        print "Write not currently supported"
         
 if(debug == 1):
     print 'L1 Cache Contents:'
@@ -335,15 +377,37 @@ if(debug == 1):
             print 'Block ' + str(i) + ': Valid: ' + str(L3cache[i].valid) + ' Tag: ' + str(L3cache[i].tag)
 
 # Output results
-hrate = 0.0
-mrate = 0.0
-amat = 0.0
-hrate = (float(L1nHits)/L1nReads) * 100
-mrate = (float(L1nMisses)/L1nReads) * 100
-amat = L1hTime + (mrate / 100) * memTime
-print 'Reads: ' + str(L1nReads)
-print 'Hits: ' + str(L1nHits)
-print 'Misses: ' + str(L1nMisses)
-print 'Hit Rate: ' + str(hrate)
-print 'Miss Rate: ' + str(mrate)
+L1hrate = (float(L1nHits)/L1nReads) * 100
+L1mrate = (float(L1nMisses)/L1nReads) * 100
+if( numLevels >= 2 ):
+    L2hrate = (float(L2nHits)/L2nReads) * 100
+    L2mrate = (float(L2nMisses)/L2nReads) * 100
+if( numLevels == 3 ):
+    L3hrate = (float(L3nHits)/L3nReads) * 100
+    L3mrate = (float(L3nMisses)/L3nReads) * 100
+if( numLevels == 1 ):
+    amat = L1hTime + (L1mrate / 100) * memTime
+if( numLevels == 2 ):
+    amat = L1hTime + (L1mrate / 100) * (L2hTime + (L2mrate / 100) * memTime)
+if( numLevels == 3 ):
+    amat = L1hTime + (L1mrate / 100) * (L2hTime + (L2mrate / 100) * (L3hTime + (L3mrate / 100) * memTime))
+print 'L1 Reads: ' + str(L1nReads)
+print 'L1 Hits: ' + str(L1nHits)
+print 'L1 Misses: ' + str(L1nMisses)
+if( numLevels >= 2 ):
+    print 'L2 Reads: ' + str(L2nReads)
+    print 'L2 Hits: ' + str(L2nHits)
+    print 'L2 Misses: ' + str(L2nMisses)
+if( numLevels == 3 ):
+    print 'L3 Reads: ' + str(L3nReads)
+    print 'L3 Hits: ' + str(L3nHits)
+    print 'L3 Misses: ' + str(L3nMisses)
+print 'L1 Hit Rate: ' + str(L1hrate)
+print 'L1 Miss Rate: ' + str(L1mrate)
+if( numLevels >= 2 ):
+    print 'L2 Hit Rate: ' + str(L2hrate)
+    print 'L2 Miss Rate: ' + str(L2mrate)
+if( numLevels == 3 ):
+    print 'L3 Hit Rate: ' + str(L3hrate)
+    print 'L3 Miss Rate: ' + str(L3mrate)
 print 'AMAT: ' + str(amat)
