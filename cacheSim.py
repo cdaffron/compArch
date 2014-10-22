@@ -122,6 +122,8 @@ for line in infile:
         print 'Addr: ' + hex(L1addr)
     L1nReads += 1
     L1found = False
+    L2found = False
+    L3found = False
     L1setAddr = ( addr / L1bSize ) % L1nSets
     L1startBlock = L1setAddr * L1setSize
     L1endBlock = ( L1setAddr + 1 ) * L1setSize - 1
@@ -181,6 +183,15 @@ for line in infile:
 
     # Logic for finding address in L2 cache.
     if(L1found == False and L2found == False):
+        L2setAddr = ( addr / L2bSize ) % L2nSets
+        L2startBlock = L2setAddr * L2setSize
+        L2endBlock = ( L2setAddr + 1 ) * L2setSize - 1
+        L2minAddr = ( L2addr - ( L2addr % L2bSize ) )
+        L2maxAddr = ( L2addr + ( L2bSize - L2addr % L2bSize ) - 1 )
+        if( debug == 1 ):
+            print 'Heading into L2, address not found in L1 Cache'
+            print 'L2 Min Addr: ' + hex(L2minAddr) + ' Max Addr: ' + hex(L2maxAddr)
+            print 'L2 Set Addr: ' + hex(L2setAddr)
         for i in range(L2startBlock, L2endBlock + 1):
             # If block valid bit is set, test to see if tag matches address.
             # If match, update block access time.
@@ -213,6 +224,15 @@ for line in infile:
 
     # Logic for finding address in L3 cache.
     if(L1found == False and L2found == False and L3found == False):
+        L3setAddr = ( addr / L3bSize ) % L3nSets
+        L3startBlock = L3setAddr * L3setSize
+        L3endBlock = ( L3setAddr + 1 ) * L3setSize - 1
+        L3minAddr = ( L3addr - ( L3addr % L3bSize ) )
+        L3maxAddr = ( L3addr + ( L3bSize - L3addr % L3bSize ) - 1 )
+        if( debug == 1 ):
+            print 'Heading into L3, address not found in L3 Cache'
+            print 'L3 Min Addr: ' + hex(L3minAddr) + ' Max Addr: ' + hex(L3maxAddr)
+            print 'L3 Set Addr: ' + hex(L3setAddr)
         for i in range(L3startBlock, L3endBlock + 1):
             # If block valid bit is set, test to see if tag matches address.
             # If match, update block access time.
