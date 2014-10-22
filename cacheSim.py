@@ -110,10 +110,10 @@ L1addr = 0
 type = ''
 for line in infile:
     separate = line.split()
-    addr = int(separate[0], base=16)
+    L1addr = int(separate[0], base=16)
     type = str(separate[1])
     if( debug == 1 ):
-        print 'Addr: ' + hex(addr)
+        print 'Addr: ' + hex(L1addr)
     L1nReads += 1
     L1found = False
     L1setAddr = ( addr / L1bSize ) % L1nSets
@@ -122,8 +122,8 @@ for line in infile:
     L1minAddr = ( L1addr - ( L1addr % L1bSize ) )
     L1maxAddr = ( L1addr + ( L1bSize - L1addr % L1bSize ) - 1 )
     if( debug == 1 ):
-        print 'L1 Min Addr: ' + str(L1minAddr) + ' Max Addr: ' + str(L1maxAddr)
-        print 'L1 Set Addr: ' + str(L1setAddr)
+        print 'L1 Min Addr: ' + hex(L1minAddr) + ' Max Addr: ' + hex(L1maxAddr)
+        print 'L1 Set Addr: ' + hex(L1setAddr)
     
     for i in range(L1startBlock, L1endBlock + 1):
         if(L1cache[i].valid == 1):
