@@ -119,6 +119,20 @@ L1cache = [temp]
 for i in range(L1nBlocks):
     temp = entry()
     L1cache.append(temp)
+
+if( numLevels >= 2 ):
+    temp = entry()
+    L2cache = [temp]
+    for i in range(L2nBlocks):
+        temp = entry()
+        L2cache.append(temp)
+        
+if( numLevels == 3 ):
+    temp = entry()
+    L3cache = [temp]
+    for i in range(L3nBlocks):
+        temp = entry()
+        L3cache.append(temp)
     
 L1addr = 0
 type = ''
@@ -128,169 +142,197 @@ for line in infile:
     type = str(separate[1])
     if( debug == 1 ):
         print 'Addr: ' + hex(L1addr)
-    L1nReads += 1
-    L1found = False
-    L2found = False
-    L3found = False
-    L1setAddr = ( addr / L1bSize ) % L1nSets
-    L1startBlock = L1setAddr * L1setSize
-    L1endBlock = ( L1setAddr + 1 ) * L1setSize - 1
-    L1minAddr = ( L1addr - ( L1addr % L1bSize ) )
-    L1maxAddr = ( L1addr + ( L1bSize - L1addr % L1bSize ) - 1 )
-    if( debug == 1 ):
-        print 'L1 Min Addr: ' + hex(L1minAddr) + ' Max Addr: ' + hex(L1maxAddr)
-        print 'L1 Set Addr: ' + hex(L1setAddr)
-
-    # These are mainly notes for my brain :)
-    # Program flow:
-    # Look for existing in L1
-    # If not, look for empty in L1
-    # If not, look for existing in L2
-    # If not, look for empty in L2
-    # If not, look for existing in L3
-    # If not, look for empty in L3
-    # If not...
-    # LRU write to L3
-    # LRU write to L2
-    # LRU write to L1
-
-    ##################### 
-    # L1 Cache Checking #
-    #####################
-
-    # Logic for finding address in L1 cache.
-    for i in range(L1startBlock, L1endBlock + 1):
-        # If block valid bit is set, test to see if tag matches address.
-        # If match, update block access time.
-        if(L1cache[i].valid == 1):
-            if(L1cache[i].tag == (L1addr >> int(L1wordShift + L1setShift + byteShift))):
-                if(debug == 1):
-                    print 'Data found in L1 block: ' + str(i)
-                L1cache[i].lastAccess = time.time()
-                L1found = True
-                L1nHits += 1
-                break
     
-    # Logic for finding empty block to place address.
-    if(L1found == False):
+    if( type == 'R' ):
+        L1nReads += 1
+        L1found = False
+        L2found = False
+        L3found = False
+        L1setAddr = ( ( L1addr >> byteShift ) / L1bSize ) % L1nSets
+        L1startBlock = L1setAddr * L1setSize
+        L1endBlock = ( L1setAddr + 1 ) * L1setSize - 1
+        L1minAddr = ( L1addr - ( L1addr % L1bSize ) )
+        L1maxAddr = ( L1addr + ( L1bSize - L1addr % L1bSize ) - 1 )
+        if( debug == 1 ):
+            print 'L1 Min Addr: ' + hex(L1minAddr) + ' Max Addr: ' + hex(L1maxAddr)
+            print 'L1 Set Addr: ' + hex(L1setAddr)
+
+        # These are mainly notes for my brain :)
+        # Program flow:
+        # Look for existing in L1
+        # If not, look for empty in L1
+        # If not, look for existing in L2
+        # If not, look for empty in L2
+        # If not, look for existing in L3
+        # If not, look for empty in L3
+        # If not...
+        # LRU write to L3
+        # LRU write to L2
+        # LRU write to L1
+
+        ##################### 
+        # L1 Cache Checking #
+        #####################
+
+        # Logic for finding address in L1 cache.
         for i in range(L1startBlock, L1endBlock + 1):
-            # If empty block found, set valid bit, set tag, set last access time.
-            if(L1cache[i].valid == 0):
-                if(debug == 1):
-                    print 'Empty L1 block found at ' + str(i)
-                L1cache[i].valid = 1
-                L1cache[i].tag = (L1addr >> int(L1wordShift + L1setShift + byteShift))
-                L1cache[i].lastAccess = time.time()
-                L1found = True
-                L1nMisses += 1
-                break
-
-    ##################### 
-    # L2 Cache Checking #
-    #####################
-
-    # Logic for finding address in L2 cache.
-    if(L1found == False and L2found == False):
-        L2setAddr = ( addr / L2bSize ) % L2nSets
-        L2startBlock = L2setAddr * L2setSize
-        L2endBlock = ( L2setAddr + 1 ) * L2setSize - 1
-        L2minAddr = ( L2addr - ( L2addr % L2bSize ) )
-        L2maxAddr = ( L2addr + ( L2bSize - L2addr % L2bSize ) - 1 )
-        if( debug == 1 ):
-            print 'Heading into L2, address not found in L1 Cache'
-            print 'L2 Min Addr: ' + hex(L2minAddr) + ' Max Addr: ' + hex(L2maxAddr)
-            print 'L2 Set Addr: ' + hex(L2setAddr)
-        for i in range(L2startBlock, L2endBlock + 1):
             # If block valid bit is set, test to see if tag matches address.
             # If match, update block access time.
-            if(L2cache[i].valid == 1):
-                if(L2cache[i].tag == (L1addr >> int(L1wordShift + L1setShift + byteShift))):
+            if(L1cache[i].valid == 1):
+                if(L1cache[i].tag == (L1addr >> int(L1wordShift + L1setShift + byteShift))):
                     if(debug == 1):
-                        print 'Data found in L2 block: ' + str(i)
-                    L2cache[i].lastAccess = time.time()
-                    L2found = True
-                    L2nHits += 1
+                        print 'Data found in L1 block: ' + str(i)
+                    L1cache[i].lastAccess = time.time()
+                    L1found = True
+                    L1nHits += 1
                     break
-    
-    # Logic for finding empty block to place address.
-    if(L1found == False and L2found == False):
-        for i in range(L2startBlock, L2endBlock + 1):
-            # If empty block found, set valid bit, set tag, set last access time.
-            if(L2cache[i].valid == 0):
-                if(debug == 1):
-                    print 'Empty L2 block found at ' + str(i)
-                L2cache[i].valid = 1
-                L2cache[i].tag = (L1addr >> int(L1wordShift + L1setShift))
-                L2cache[i].lastAccess = time.time()
-                L2found = True
-                L2nMisses += 1
-                break
 
-    ##################### 
-    # L3 Cache Checking #
-    #####################
+        ##################### 
+        # L2 Cache Checking #
+        #####################
+        
+        # Logic for finding address in L2 cache.
+        if( numLevels >= 2 ):
+            if(L1found == False and L2found == False):
+                L2setAddr = ( addr / L2bSize ) % L2nSets
+                L2startBlock = L2setAddr * L2setSize
+                L2endBlock = ( L2setAddr + 1 ) * L2setSize - 1
+                L2minAddr = ( L2addr - ( L2addr % L2bSize ) )
+                L2maxAddr = ( L2addr + ( L2bSize - L2addr % L2bSize ) - 1 )
+                if( debug == 1 ):
+                    print 'Heading into L2, address not found in L1 Cache'
+                    print 'L2 Min Addr: ' + hex(L2minAddr) + ' Max Addr: ' + hex(L2maxAddr)
+                    print 'L2 Set Addr: ' + hex(L2setAddr)
+                for i in range(L2startBlock, L2endBlock + 1):
+                    # If block valid bit is set, test to see if tag matches address.
+                    # If match, update block access time.
+                    if(L2cache[i].valid == 1):
+                        if(L2cache[i].tag == (L1addr >> int(L1wordShift + L1setShift + byteShift))):
+                            if(debug == 1):
+                                print 'Data found in L2 block: ' + str(i)
+                            L2cache[i].lastAccess = time.time()
+                            L2found = True
+                            L2nHits += 1
+                            break
 
-    # Logic for finding address in L3 cache.
-    if(L1found == False and L2found == False and L3found == False):
-        L3setAddr = ( addr / L3bSize ) % L3nSets
-        L3startBlock = L3setAddr * L3setSize
-        L3endBlock = ( L3setAddr + 1 ) * L3setSize - 1
-        L3minAddr = ( L3addr - ( L3addr % L3bSize ) )
-        L3maxAddr = ( L3addr + ( L3bSize - L3addr % L3bSize ) - 1 )
-        if( debug == 1 ):
-            print 'Heading into L3, address not found in L3 Cache'
-            print 'L3 Min Addr: ' + hex(L3minAddr) + ' Max Addr: ' + hex(L3maxAddr)
-            print 'L3 Set Addr: ' + hex(L3setAddr)
-        for i in range(L3startBlock, L3endBlock + 1):
-            # If block valid bit is set, test to see if tag matches address.
-            # If match, update block access time.
-            if(L3cache[i].valid == 1):
-                if(L3cache[i].tag == (L1addr >> int(L1wordShift + L1setShift + byteShift))):
+        ##################### 
+        # L3 Cache Checking #
+        #####################
+                            
+        # Logic for finding address in L3 cache.
+        if( numLevels == 3 ):
+            if(L1found == False and L2found == False and L3found == False):
+                L3setAddr = ( addr / L3bSize ) % L3nSets
+                L3startBlock = L3setAddr * L3setSize
+                L3endBlock = ( L3setAddr + 1 ) * L3setSize - 1
+                L3minAddr = ( L3addr - ( L3addr % L3bSize ) )
+                L3maxAddr = ( L3addr + ( L3bSize - L3addr % L3bSize ) - 1 )
+                if( debug == 1 ):
+                    print 'Heading into L3, address not found in L3 Cache'
+                    print 'L3 Min Addr: ' + hex(L3minAddr) + ' Max Addr: ' + hex(L3maxAddr)
+                    print 'L3 Set Addr: ' + hex(L3setAddr)
+                for i in range(L3startBlock, L3endBlock + 1):
+                    # If block valid bit is set, test to see if tag matches address.
+                    # If match, update block access time.
+                    if(L3cache[i].valid == 1):
+                        if(L3cache[i].tag == (L1addr >> int(L1wordShift + L1setShift + byteShift))):
+                            if(debug == 1):
+                                print 'Data found in L3 block: ' + str(i)
+                            L3cache[i].lastAccess = time.time()
+                            L3found = True
+                            L3nHits += 1
+                            break
+        
+            ############################
+            # L3 Cache Empty Placement #
+            ############################
+            
+            # Logic for finding empty block to place address.
+            if(L1found == False and L2found == False and L3found == False):
+                for i in range(L3startBlock, L3endBlock + 1):
+                    # If empty block found, set valid bit, set tag, set last access time.
+                    if(L3cache[i].valid == 0):
+                        if(debug == 1):
+                            print 'Empty L3 block found at ' + str(i)
+                        L3cache[i].valid = 1
+                        L3cache[i].tag = (L1addr >> int(L1wordShift + L1setShift + byteShift))
+                        L3cache[i].lastAccess = time.time()
+                        L3found = True
+                        L3nMisses += 1
+                        break
+
+        ############################
+        # L2 Cache Empty Placement #
+        ############################
+                        
+        if( numLevels >= 2 ):
+            # Logic for finding empty block to place address.
+            if(L1found == False and L2found == False):
+                for i in range(L2startBlock, L2endBlock + 1):
+                    # If empty block found, set valid bit, set tag, set last access time.
+                    if(L2cache[i].valid == 0):
+                        if(debug == 1):
+                            print 'Empty L2 block found at ' + str(i)
+                        L2cache[i].valid = 1
+                        L2cache[i].tag = (L1addr >> int(L1wordShift + L1setShift))
+                        L2cache[i].lastAccess = time.time()
+                        L2found = True
+                        L2nMisses += 1
+                        break
+
+        ############################
+        # L1 Cache Empty Placement #
+        ############################
+                        
+        # Logic for finding empty block to place address.
+        if(L1found == False):
+            for i in range(L1startBlock, L1endBlock + 1):
+                # If empty block found, set valid bit, set tag, set last access time.
+                if(L1cache[i].valid == 0):
                     if(debug == 1):
-                        print 'Data found in L3 block: ' + str(i)
-                    L3cache[i].lastAccess = time.time()
-                    L3found = True
-                    L3nHits += 1
+                        print 'Empty L1 block found at ' + str(i)
+                    L1cache[i].valid = 1
+                    L1cache[i].tag = (L1addr >> int(L1wordShift + L1setShift + byteShift))
+                    L1cache[i].lastAccess = time.time()
+                    L1found = True
+                    L1nMisses += 1
                     break
-    
-    # Logic for finding empty block to place address.
-    if(L1found == False and L2found == False and L3found == False):
-        for i in range(L3startBlock, L3endBlock + 1):
-            # If empty block found, set valid bit, set tag, set last access time.
-            if(L3cache[i].valid == 0):
-                if(debug == 1):
-                    print 'Empty L3 block found at ' + str(i)
-                L3cache[i].valid = 1
-                L3cache[i].tag = (L1addr >> int(L1wordShift + L1setShift + byteShift))
-                L3cache[i].lastAccess = time.time()
-                L3found = True
-                L3nMisses += 1
-                break
 
     ############# 
     # LRU Write #
     #############
-
-    # Logic for replacing LRU block with address.
-    if(L1found == False):
-        oldest = L1startBlock
-        oldTime = L1cache[L1startBlock].lastAccess
-        # Loop through all blocks in set and find oldest address.
-        # Replace with curr address, set valid bit, set last access time.
-        for i in range(L1startBlock + 1, L1endBlock + 1):
-            if(L1cache[i].lastAccess < oldTime):
-                oldTime = L1cache[i].lastAccess
-                oldest = i
-        if(debug == 1):
-            print 'Oldest L1 block, data stored at: ' + str(oldest)
-        L1cache[oldest].valid = 1
-        L1cache[oldest].tag = (L1addr >> int(L1wordShift + L1setShift + byteShift))
-        L1cache[oldest].lastAccess = time.time()
-        L1nMisses += 1
+    if( type == 'W' ):
+        # Logic for replacing LRU block with address.
+        if(L1found == False):
+            oldest = L1startBlock
+            oldTime = L1cache[L1startBlock].lastAccess
+            # Loop through all blocks in set and find oldest address.
+            # Replace with curr address, set valid bit, set last access time.
+            for i in range(L1startBlock + 1, L1endBlock + 1):
+                if(L1cache[i].lastAccess < oldTime):
+                    oldTime = L1cache[i].lastAccess
+                    oldest = i
+            if(debug == 1):
+                print 'Oldest L1 block, data stored at: ' + str(oldest)
+            L1cache[oldest].valid = 1
+            L1cache[oldest].tag = (L1addr >> int(L1wordShift + L1setShift + byteShift))
+            L1cache[oldest].lastAccess = time.time()
+            L1nMisses += 1
         
 if(debug == 1):
+    print 'L1 Cache Contents:'
     for i in range(L1nBlocks):
         print 'Block ' + str(i) + ': Valid: ' + str(L1cache[i].valid) + ' Tag: ' + str(L1cache[i].tag)
+        
+    if( numLevels >= 2 ):
+        print 'L2 Cache Contents:'
+        for i in range(L2nBlocks):
+            print 'Block ' + str(i) + ': Valid: ' + str(L2cache[i].valid) + ' Tag: ' + str(L2cache[i].tag)
+            
+    if( numLevels == 3 ):
+        print 'L3 Cache Contents:'
+        for i in range(L3nBlocks):
+            print 'Block ' + str(i) + ': Valid: ' + str(L3cache[i].valid) + ' Tag: ' + str(L3cache[i].tag)
 
 # Output results
 hrate = 0.0
