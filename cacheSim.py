@@ -50,13 +50,19 @@ L1assoc = args.L1[2]
 L1nReads = 0
 L1nHits = 0
 L1nMisses = 0
+L2nReads = 0
+L2nHits = 0
+L2nMisses = 0
+L3nReads = 0
+L3nHits = 0
+L3nMisses = 0
 fname = args.file_name
 if( args.L2 ):
     numLevels = 2
     L2bSize = args.L2[0]
     L2nBlocks = args.L2[1]
     L2hTime = args.L2[3]
-    L2assoc = args.L1[2]
+    L2assoc = args.L2[2]
 if( args.L3 ):
     if( not args.L2 ):
         print 'Cannot have L3 without L2'
@@ -136,7 +142,10 @@ for line in infile:
                 L1cache[i].lastAccess = time.time()
                 L1found = True
                 L1nHits += 1
-                break
+                break # remove this break later after L2/L3 is implemented    
+        else
+
+            break
     
     # Logic for finding empty block to place address.
     if(L1found == False):
