@@ -198,6 +198,7 @@ for line in infile:
         print 'L1: ' + str(L1nWrites)
         print 'L2: ' + str(L2nWrites)
         print 'L3: ' + str(L3nWrites)
+        print 'Total: ' + str(totalWriteCmds)
         exit()
 
     # for i in range(L1nBlocks):
@@ -341,14 +342,14 @@ for line in infile:
                                 L2nWrites += 1
                                 print 'Write to L2!!!!'
                                 break
-            # else:
-            #     for i in range(L2startBlock, L2endBlock + 1 ):
-            #         if(L2cache[i].valid == 1):
-            #             if(L2cache[i].tag == (addr >> int(L2wordShift + L2setShift + byteShift))):
-            #                 if(debug == 1):
-            #                     print 'Updating LRU time in L2'
-            #                 L2cache[i].lastAccess = time.time()
-            #                 break
+            else:
+                for i in range(L2startBlock, L2endBlock + 1 ):
+                    if(L2cache[i].valid == 1):
+                        if(L2cache[i].tag == (addr >> int(L2wordShift + L2setShift + byteShift))):
+                            if(debug == 1):
+                                print 'Updating LRU time in L2'
+                            L2cache[i].lastAccess = time.time()
+                            break
 
 
     ##################### 
@@ -406,14 +407,14 @@ for line in infile:
                                 print 'Write to L3!!!'
                                 break
                     print 'Completed L3 WT block'
-            # else:
-            #     for i in range(L3startBlock, L3endBlock + 1):
-            #         if(L3cache[i].valid == 1):
-            #             if(L3cache[i].tag == (addr >> int(L3wordShift + L3setShift + byteShift))):
-            #                 if(debug == 1):
-            #                     print 'Updating L3 LRU time' + str(i)
-            #                 L3cache[i].lastAccess = time.time()
-            #                 break
+            else:
+                for i in range(L3startBlock, L3endBlock + 1):
+                    if(L3cache[i].valid == 1):
+                        if(L3cache[i].tag == (addr >> int(L3wordShift + L3setShift + byteShift))):
+                            if(debug == 1):
+                                print 'Updating L3 LRU time' + str(i)
+                            L3cache[i].lastAccess = time.time()
+                            break
                 #Update LRU time
 
 
