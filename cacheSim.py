@@ -1,14 +1,21 @@
+## CS 530 Cache Simulator
+## Christopher Daffron and Eric Reinsmidt
+## October 24, 2014
+
 import argparse, math, time
 
+## Function to determine if a number is a power of 2
 def is_power2(num):
     return((num & (num - 1)) == 0) and num != 0
 
+## Data structure for each entry in the cache
 class entry:
     valid = 0
     dirty = 0
     tag = 0
     lastAccess = 0
     
+## Define and parse the arguments
 parser = argparse.ArgumentParser(description='cache simulator arguments')
 parser.add_argument('word_size', type=int)
 parser.add_argument('--L1', nargs=4, type=int, required=True, metavar=('block_size','num_lines','associativity','hit_time'), help='L1 cache parameters')
@@ -21,36 +28,48 @@ group.add_argument('--WB', action='store_true')
 group.add_argument('--WT', action='store_true')
 args = parser.parse_args()
 
-#print args
-
-print 'File name: ' + args.file_name
-print 'Word size is: ' + str(args.word_size)
-print 'Write to memory delay is: ' + str(args.write_time)
-print 'L1 stats:'
-print '\tBlock Size: ' + str(args.L1[0])
-print '\tNumber of Lines: ' + str(args.L1[1])
-print '\tAssociativity: ' + str(args.L1[2])
-print '\tHit Time: ' + str(args.L1[3])
-if( args.L2 ):
-    print 'L2 stats:'
-    print '\tBlock Size: ' + str(args.L2[0])
-    print '\tNumber of Lines: ' + str(args.L2[1])
-    print '\tAssociativity: ' + str(args.L2[2])
-    print '\tHit Time: ' + str(args.L2[3])
-if( args.L3 ):
-    print 'L3 stats:'
-    print '\tBlock Size: ' + str(args.L3[0])
-    print '\tNumber of Lines: ' + str(args.L3[1])
-    print '\tAssociativity: ' + str(args.L3[2])
-    print '\tHit Time: ' + str(args.L3[3])
-
+# Flag to control output
 debug = 1
+
+# Print out all the arguments
+if( debug == 1 ):
+    print 'File name: ' + args.file_name
+    print 'Word size is: ' + str(args.word_size)
+    print 'Write to memory delay is: ' + str(args.write_time)
+    print 'L1 stats:'
+    print '\tBlock Size: ' + str(args.L1[0])
+    print '\tNumber of Lines: ' + str(args.L1[1])
+    print '\tAssociativity: ' + str(args.L1[2])
+    print '\tHit Time: ' + str(args.L1[3])
+    if( args.L2 ):
+        print 'L2 stats:'
+        print '\tBlock Size: ' + str(args.L2[0])
+        print '\tNumber of Lines: ' + str(args.L2[1])
+        print '\tAssociativity: ' + str(args.L2[2])
+        print '\tHit Time: ' + str(args.L2[3])
+    if( args.L3 ):
+        print 'L3 stats:'
+        print '\tBlock Size: ' + str(args.L3[0])
+        print '\tNumber of Lines: ' + str(args.L3[1])
+        print '\tAssociativity: ' + str(args.L3[2])
+        print '\tHit Time: ' + str(args.L3[3])
+
+# Parse the arguments, error check them, and initialize variables
 numLevels = 1
 WT = args.WT
 WB = args.WB
 wordSize = args.word_size
+if( not is_power2( wordSize ) ):
+    print 'Word Size must be a power of 2'
+    exit()
 L1bSize = args.L1[0]
+if( not is_power2( L1bSize ) ):
+    print 'L1 block size must be a power of 2'
+    exit()
 L1nBlocks = args.L1[1]
+if( not is_power2( L1nBlocks ) ):
+    print 'L1 number of lines must be a power of 2'
+    exit()
 L1hTime = args.L1[3]
 memTime = args.write_time
 L1assoc = args.L1[2]
@@ -71,7 +90,13 @@ fname = args.file_name
 if( args.L2 ):
     numLevels = 2
     L2bSize = args.L2[0]
+    if( not is_power2(L2bSize ) ):
+        print 'L2 block size must be a power of 2'
+        exit()
     L2nBlocks = args.L2[1]
+    if( not is_power2( L2nBlocks ) ):
+        print 'L2 number of lines must be a power of 2'
+        exit()
     L2hTime = args.L2[3]
     L2assoc = args.L2[2]
 if( args.L3 ):
@@ -80,16 +105,25 @@ if( args.L3 ):
         exit()
     numLevels = 3
     L3bSize = args.L3[0]
+    if( not is_power2( L3bSize ) ):
+        print 'L3 block size must be a power of 2'
+        exit()
     L3nBlocks = args.L3[1]
+    if( not is_power2( L3nBlocks ) ):
+        print 'L3 number of lines must be a power of 2'
+        exit()
     L3hTime = args.L3[3]
     L3assoc = args.L3[2]
 
+# Open the file containing the cache reads and writes
 infile = open(fname, 'r')
 
 # if( WB == True ):
 #     print 'You can\'t do that'
 #     exit()
 
+
+# Calculate various cache values
 addr = 0
 L1setAddr = 0
 L2setAddr = 0
@@ -115,6 +149,8 @@ L3maxAddr = 0
 L1found = False
 L2found = False
 L3found = False
+
+# Calculate the number of bits dedicated to byte offset, block offset, and index
 byteShift = math.log(wordSize, 2)
 L1wordShift = math.log(L1bSize, 2)
 L1setShift = math.log(L1nSets, 2)
@@ -128,6 +164,7 @@ if( numLevels == 3 ):
 if( debug == 1 ):
     print 'L1 bsize: ' + str(L1bSize) + '\nnSets: ' + str(L1nSets)
     
+# Initialize all levels of cache
 temp = entry()
 L1cache = [temp]
 for i in range(L1nBlocks):
@@ -148,12 +185,15 @@ if( numLevels == 3 ):
         temp = entry()
         L3cache.append(temp)
     
-#L1addr = 0
 type = ''
+totalWriteCmds = 0
+# Iterate through all the accesses
 for line in infile:
     separate = line.split()
     addr = int(separate[0], base=16)
     type = str(separate[1])
+    if( type == 'W' ):
+        totalWriteCmds += 1
     if( debug == 1 ):
         print 'Addr: ' + hex(addr)
     
@@ -171,17 +211,31 @@ for line in infile:
         print 'L1 Set Addr: ' + hex(L1setAddr)
 
     # These are mainly notes for my brain :)
-    # Program flow:
+    # Program flow for reads:
     # Look for existing in L1
     # If not, look for existing in L2
     # If not, look for existing in L3
-    # If not, look for empty in L3 then do LRU
-    # If not, look for empty in L2 then do LRU
-    # If not, look for empty in L1 then do LRU
-    # If not...
-    # LRU write to L3
-    # LRU write to L2
-    # LRU write to L1
+    # If not, read from main memory
+    # Look for empty in L3. If not, do LRU
+    # Look for empty in L2. If not, do LRU
+    # Look for empty in L1. If not, do LRU
+    #
+    # Program Flow for write-through
+    # Look for existing in L1
+    #   If present, write to all levels
+    # If not, look for existing in L2
+    #   If present, write and load to all levels
+    # If not, look for existing in L3
+    #   If present, write and load to all levels
+    # If not, write to main memory and load to all levels
+    # ** Loading uses empty and then LRU **
+    #
+    # Program Flow for write-back
+    # Look for existing in L1
+    #   If present, write to L1
+    #   If already dirty, write to lower level, falling through as necessary
+    # If not present, load from appropriate level of cache and write to L1,
+    #   pushing dirty to lower level as necessary
 
     ##################### 
     # L1 Cache Checking #
@@ -190,7 +244,8 @@ for line in infile:
     # Logic for finding address in L1 cache.
     for i in range(L1startBlock, L1endBlock + 1):
         # If block valid bit is set, test to see if tag matches address.
-        # If match, update block access time.
+        # Reads: If match, update block access time
+        # Writes: If match, update access time and flag as dirty if WB
         if(L1cache[i].valid == 1):
             if(L1cache[i].tag == (addr >> int(L1wordShift + L1setShift + byteShift))):
                 if( type == 'R' ):
@@ -207,7 +262,8 @@ for line in infile:
                     L1found = True
                     L1nHits += 1
                     L1nWrites += 1
-                    L1cache[i].dirty = 1
+                    if( WB == True ):
+                        L1cache[i].dirty = 1
                     break
 
 
@@ -217,6 +273,7 @@ for line in infile:
     
     # Logic for finding address in L2 cache.
     if( numLevels >= 2 ):
+        # If not found in the first level of cache, search here
         if( L1found == False ):
             L2nReads += 1
             L2setAddr = ( ( addr >> int(byteShift) ) / L2bSize ) % L2nSets
@@ -238,10 +295,11 @@ for line in infile:
                         L2cache[i].lastAccess = time.time()
                         L2found = True
                         L2nHits += 1
-                        if( type == 'W' ):
-                            L2nWrites += 1
-                            L2cache[i].dirty = 1
+                        #if( type == 'W' ):
+                            #L2nWrites += 1
+                            #L2cache[i].dirty = 1
                         break
+        # If found in L1 and write through, update as necessary
         else:
             if( type == 'W' ):
                 if( WT == True ):
@@ -263,6 +321,7 @@ for line in infile:
                         
     # Logic for finding address in L3 cache
     if( numLevels == 3 ):
+        # If not found in L1 or L2, search here
         if( L1found == False and L2found == False ):
             L3nReads += 1
             L3setAddr = ( ( addr >> int(byteShift) ) / L3bSize ) % L3nSets
@@ -288,6 +347,7 @@ for line in infile:
                             L3nWrites += 1
                             L3cache[i].dirty = 1
                         break
+        # If found in higher level and write-through, update as necessary
         else:
             if( type == 'W' ):
                 if( WT == True ):
@@ -305,6 +365,7 @@ for line in infile:
     #####################
     # Main Memory Write #
     #####################
+    # If write-through, write to main memory
     if( type == 'W' ):
         if( WT == True ):
             MMnWrites += 1
@@ -315,6 +376,7 @@ for line in infile:
         ############################
         
         # Logic for finding empty block to place address.
+        # If not found in any level of cache
         if(L1found == False and L2found == False and L3found == False):
             for i in range(L3startBlock, L3endBlock + 1):
                 # If empty block found, set valid bit, set tag, set last access time.
@@ -330,7 +392,7 @@ for line in infile:
                     if( type == 'W' and WT == True ):
                         L3nWrites += 1
                     break
-            ## Add LRU here
+            # LRU replacement
             if( L3found == False ):
                 oldest = L3startBlock
                 oldTime = L3cache[L3startBlock].lastAccess
@@ -350,6 +412,7 @@ for line in infile:
                     if( WT == True ):
                         L3nWrites += 1
                     if( WB == True ):
+                        # If block being replace is dirty and write back is used, write to main memory
                         if( L3cache[oldest].dirty == 1):
                             MMnWrites += 1
                 L3cache[oldest].dirty = 0
@@ -376,6 +439,7 @@ for line in infile:
                     if( type == 'W' and WT == True ):
                         L2nWrites += 1
                     break
+            # LRU replacement
             if( L2found == False ):
                 oldest = L2startBlock
                 oldTime = L2cache[L2startBlock].lastAccess
@@ -388,6 +452,7 @@ for line in infile:
                 if( debug == 1 ):
                     print 'Oldest L2 block found, data stored at: ' + str(oldest)
                 L2cache[oldest].valid = 1
+                # Determine range of addresses that are in selected cache line
                 minOldAddr = ( L2cache[oldest].tag << int( L2wordShift + L2setShift + byteShift ) )
                 maxOldAddr = ( minOldAddr | ((1 << (int( L2wordShift + L2setShift + byteShift ))) - 1))
                 if( debug == 1 ):
@@ -400,10 +465,12 @@ for line in infile:
                     if( WT == True ):
                         L2nWrites += 1
                     if( WB == True ):
+                        # If the block being replaced is dirty
                         if( L2cache[oldest].dirty == 1):
-                            ## Write the dirty block to L3 if present
+                            # If there are only 2 levels, write to main memory
                             if( numLevels == 2):
                                 MMnWrites += 1
+                            # If there are 3 levels, write to L3. If block being replaced in L3 is dirty, write that block to main memory
                             else:
                                 for i in range(L3startBlock, L3endBlock + 1):
                                     minBlockAddr = ( L3cache[i].tag << int(L3wordShift + L3setShift + byteShift))
@@ -434,9 +501,10 @@ for line in infile:
                 L1cache[i].dirty = 0
                 L1found = True
                 L1nMisses += 1
-                if( type == 'W' and WT == True):
+                if( type == 'W' ):
                     L1nWrites += 1
                 break
+        # LRU replacement
         if( L1found == False ):
             oldest = L1startBlock
             oldTime = L1cache[L1startBlock].lastAccess
@@ -449,68 +517,82 @@ for line in infile:
             if( debug == 1 ):
                 print 'Oldest L1 block found, data stored at: ' + str(oldest)
             L1cache[oldest].valid = 1
+            # Determine range of addresses in selected cache line
             minOldAddr = ( L1cache[oldest].tag << int( L1wordShift + L1setShift + byteShift ) )
             maxOldAddr = ( minOldAddr | ((1 << (int( L1wordShift + L1setShift + byteShift ))) - 1))
             L1cache[oldest].tag = ( addr >> int( L1wordShift + L1setShift + byteShift ) )
             L1cache[oldest].lastAccess = time.time()
             L1nMisses += 1
             if( type == 'W' ):
-                if( WT == True ):
-                    L1nWrites += 1
-                else:
+                L1nWrites += 1
+                if( WB == True ):
+                    # If block being replaced is dirty
                     if( L1cache[oldest].dirty == 1 ):
+                        # If only one level of cache, write to main memory
                         if( numLevels == 1 ):
                             MMnWrites += 1
+                        # If only two levels of cache
                         elif( numLevels == 2 ):
+                            # Find the block in the L2 cache
                             for i in range(L2startBlock, L2endBlock + 1 ):
                                 minBlockAddr = ( L2cache[i].tag << int(L2wordShift + L2setShift + byteShift))
                                 maxBlockAddr = ( minBlockAddr | ((1 << int( L2wordShift + L2setShift + byteShift)) - 1 ) )
                                 if( minOldAddr >= minBlockAddr and maxOldAddr <= maxBlockAddr ):
+                                    # If block being replaced is dirty, write to main memory
                                     if( L2cache[i].dirty == 1 ):
                                         MMnWrites += 1
                                     L2cache[i].dirty = 1
                                     L2cache[i].lastAccess = time.time()
+                                    L2nWrites += 1
                                     break
+                        # If three levels of cache
                         else:
+                            # Find the block in the L2 cache
                             for i in range(L2startBlock, L2endBlock + 1 ):
                                 minBlockAddr = ( L2cache[i].tag << int(L2wordShift + L2setShift + byteShift))
                                 maxBlockAddr = ( minBlockAddr | ((1 << int( L2wordShift + L2setShift + byteShift)) - 1 ) )
                                 if( minOldAddr >= minBlockAddr and maxOldAddr <= maxBlockAddr ):
+                                    # If block being replaced is dirty, write to L3
                                     if( L2cache[i].dirty == 1):
                                         minOldAddr = ( L2cache[i].tag << int( L2wordShift + L2setShift + byteShift ) )
                                         maxOldAddr = ( minOldAddr | ((1 << (int( L2wordShift + L2setShift + byteShift ))) - 1))
+                                        # Find the block in the L3 cache
                                         for j in range(L3startBlock, L3endBlock + 1 ):
                                             minBlockAddr = ( L3cache[j].tag << int(L3wordShift + L3setShift + byteShift))
                                             maxBlockAddr = ( minBlockAddr | ((1 << int( L3wordShift + L3setShift + byteShift)) - 1 ) )
                                             if( minOldAddr >= minBlockAddr and maxOldAddr <= maxBlockAddr ):
+                                                # If block being replaced is dirty, write to main memory
                                                 if( L3cache[j].dirty == 1 ):
                                                     MMnWrites += 1
                                                 L3cache[j].dirty = 1
                                                 L3cache[j].lastAccess = time.time()
+                                                L3nWrites += 1
                                                 break
                                     L2cache[i].dirty = 1
                                     L2cache[i].lastAccess = time.time()
+                                    L2nWrites += 1
                                     break
 
                     L1cache[oldest].dirty = 1
                     L1cache[oldest].lastAccess = time.time()
 
             L1found = True
-      
+
+# Print full cache contents if debug output enabled
 if(debug == 1):
     print 'L1 Cache Contents:'
     for i in range(L1nBlocks):
-        print 'Block ' + str(i) + ': Valid: ' + str(L1cache[i].valid) + ' Tag: ' + str(L1cache[i].tag)
+        print 'Block ' + str(i) + ': Valid: ' + str(L1cache[i].valid) + ' Dirty: ' + str(L1cache[i].dirty) + ' Tag: ' + str(L1cache[i].tag)
         
     if( numLevels >= 2 ):
         print 'L2 Cache Contents:'
         for i in range(L2nBlocks):
-            print 'Block ' + str(i) + ': Valid: ' + str(L2cache[i].valid) + ' Tag: ' + str(L2cache[i].tag)
+            print 'Block ' + str(i) + ': Valid: ' + str(L2cache[i].valid) + ' Dirty: ' + str(L2cache[i].dirty) + ' Tag: ' + str(L2cache[i].tag)
             
     if( numLevels == 3 ):
         print 'L3 Cache Contents:'
         for i in range(L3nBlocks):
-            print 'Block ' + str(i) + ': Valid: ' + str(L3cache[i].valid) + ' Tag: ' + str(L3cache[i].tag)
+            print 'Block ' + str(i) + ': Valid: ' + str(L3cache[i].valid) + ' Dirty: ' + str(L3cache[i].dirty) + ' Tag: ' + str(L3cache[i].tag)
 
 # Output results
 L1hrate = (float(L1nHits)/L1nReads) * 100
@@ -547,3 +629,10 @@ if( numLevels == 3 ):
     print 'L3 Hit Rate: ' + str(L3hrate)
     print 'L3 Miss Rate: ' + str(L3mrate)
 print 'AMAT: ' + str(amat)
+print '\nWrite Statistics:'
+print 'Total Write Commands: ' + str(totalWriteCmds)
+print 'L1 Writes: ' + str(L1nWrites)
+if( numLevels >= 2 ):
+    print 'L2 Writes: ' + str(L2nWrites)
+if( numLevels == 3 ):
+    print 'L3 Writes: ' + str(L3nWrites)
