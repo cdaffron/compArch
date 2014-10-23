@@ -115,6 +115,9 @@ if( args.L3 ):
     L3hTime = args.L3[3]
     L3assoc = args.L3[2]
 
+if( L1bSize != L2bSize or L1bSize != L3bSize ):
+    print 'WARNING!!!\nUsing different block sizes for each level causes undetermined results.'
+    raw_input('Press ENTER to continue...')
 # Open the file containing the cache reads and writes
 infile = open(fname, 'r')
 
@@ -199,7 +202,7 @@ for line in infile:
         print 'L2: ' + str(L2nWrites)
         print 'L3: ' + str(L3nWrites)
         print 'Total: ' + str(totalWriteCmds)
-        exit()
+        raw_input('Press ENTER to continue...')
 
     # for i in range(L1nBlocks):
     #     if( L1cache[i].tag != L2cache[i].tag or L1cache[i].tag != L3cache[i].tag):
@@ -214,8 +217,8 @@ for line in infile:
     addr = int(separate[0], base=16)
     type = str(separate[1])
     if( type == 'W' ):
-        #continue
-        print 'Write access'
+    #     #continue
+    #     print 'Write access'
         totalWriteCmds += 1
     if( debug == 1 ):
         print 'Addr ' + str(counter) + ': ' + hex(addr)
@@ -321,7 +324,8 @@ for line in infile:
                         L2nHits += 1
                         if( type == 'W' ):
                             L2nWrites += 1
-                            print 'Write to L2!!!'
+                            if( debug == 1 ):
+                                print 'Write to L2!!!'
                             if( WB == True ):
                                 L2cache[i].dirty = 1
                         break
@@ -329,7 +333,8 @@ for line in infile:
         else:
             if( type == 'W' ):
                 if( WT == True ):
-                    print 'Data found in L1, entering WT block'
+                    if( debug == 1 ):
+                        print 'Data found in L1, entering WT block'
                     L2nReads += 1
                     for i in range(L2startBlock, L2endBlock + 1):
                         if(L2cache[i].valid == 1):
@@ -340,7 +345,8 @@ for line in infile:
                                 L2found = True
                                 L2nHits += 1
                                 L2nWrites += 1
-                                print 'Write to L2!!!!'
+                                if( debug == 1 ):
+                                    print 'Write to L2!!!!'
                                 break
             else:
                 for i in range(L2startBlock, L2endBlock + 1 ):
@@ -382,7 +388,8 @@ for line in infile:
                         L3nHits += 1
                         if( type == 'W' ):
                             L3nWrites += 1
-                            print 'Write to L3!!!'
+                            if( debug == 1 ):
+                                print 'Write to L3!!!'
                             if( WB == True ):
                                 L3cache[i].dirty = 1
                         break
@@ -390,11 +397,12 @@ for line in infile:
         else:
             if( type == 'W' ):
                 if( WT == True ):
-                    print 'Entering L3 WT block'
                     L3nReads += 1
-                    print 'L3 set addr: ' + str(L3setAddr)
-                    print 'L3 start block: ' + str(L3startBlock)
-                    print 'L3 end block: ' + str(L3endBlock)
+                    if( debug == 1 ):
+                        print 'Entering L3 WT block'
+                        print 'L3 set addr: ' + str(L3setAddr)
+                        print 'L3 start block: ' + str(L3startBlock)
+                        print 'L3 end block: ' + str(L3endBlock)
                     for i in range(L3startBlock, L3endBlock + 1):
                         if(L3cache[i].valid == 1):
                             if(L3cache[i].tag == (addr >> int(L3wordShift + L3setShift + byteShift))):
@@ -404,9 +412,11 @@ for line in infile:
                                 L3found = True
                                 L3nHits += 1
                                 L3nWrites += 1
-                                print 'Write to L3!!!'
+                                if( debug == 1 ):
+                                    print 'Write to L3!!!'
                                 break
-                    print 'Completed L3 WT block'
+                    if( debug == 1 ):
+                        print 'Completed L3 WT block'
             else:
                 for i in range(L3startBlock, L3endBlock + 1):
                     if(L3cache[i].valid == 1):
@@ -450,7 +460,8 @@ for line in infile:
                     L3nMisses += 1
                     if( type == 'W' and WT == True ):
                         L3nWrites += 1
-                        print 'Write to L3!!!'
+                        if( debug == 1 ):
+                            print 'Write to L3!!!'
                     break
             # LRU replacement
             if( L3found == False ):
@@ -470,7 +481,8 @@ for line in infile:
                 L3nMisses += 1
                 if( type == 'W' ):
                     if( WT == True ):
-                        print 'Write to L3!!!'
+                        if( debug == 1 ):
+                            print 'Write to L3!!!'
                         L3nWrites += 1
                     if( WB == True ):
                         # If block being replace is dirty and write back is used, write to main memory
@@ -502,7 +514,8 @@ for line in infile:
                     L2nMisses += 1
                     if( type == 'W' and WT == True ):
                         L2nWrites += 1
-                        print 'Write to L2!!!'
+                        if( debug == 1 ):
+                            print 'Write to L2!!!'
                     break
             # LRU replacement
             if( L2found == False ):
@@ -529,7 +542,8 @@ for line in infile:
                 if( type == 'W' ):
                     if( WT == True ):
                         L2nWrites += 1
-                        print 'Write to L2!!!'
+                        if( debug == 1 ):
+                            print 'Write to L2!!!'
                     if( WB == True ):
                         # If the block being replaced is dirty
                         if( L2cache[oldest].dirty == 1):
@@ -572,7 +586,8 @@ for line in infile:
                 L1nMisses += 1
                 if( type == 'W' ):
                     L1nWrites += 1
-                    print 'Write to L1!!!'
+                    if( debug == 1 ):
+                        print 'Write to L1!!!'
                 break
         # LRU replacement
         if( L1found == False ):
@@ -595,7 +610,8 @@ for line in infile:
             L1nMisses += 1
             if( type == 'W' ):
                 L1nWrites += 1
-                print 'Write to L1!!!'
+                if( debug == 1 ):
+                    print 'Write to L1!!!'
                 if( WB == True ):
                     # If block being replaced is dirty
                     if( L1cache[oldest].dirty == 1 ):
@@ -615,7 +631,8 @@ for line in infile:
                                     L2cache[i].dirty = 1
                                     L2cache[i].lastAccess = time.time()
                                     L2nWrites += 1
-                                    print 'Write to L2!!!'
+                                    if( debug == 1 ):
+                                        print 'Write to L2!!!'
                                     break
                         # If three levels of cache
                         else:
@@ -639,12 +656,14 @@ for line in infile:
                                                 L3cache[j].dirty = 1
                                                 L3cache[j].lastAccess = time.time()
                                                 L3nWrites += 1
-                                                print 'Write to L3!!!'
+                                                if( debug == 1 ):
+                                                    print 'Write to L3!!!'
                                                 break
                                     L2cache[i].dirty = 1
                                     L2cache[i].lastAccess = time.time()
                                     L2nWrites += 1
-                                    print 'Write to L2!!!'
+                                    if( debug == 1 ):
+                                        print 'Write to L2!!!'
                                     break
 
                     L1cache[oldest].dirty = 1
@@ -667,6 +686,7 @@ if(debug == 1):
         print 'L3 Cache Contents:'
         for i in range(L3nBlocks):
             print 'Block ' + str(i) + ': Valid: ' + str(L3cache[i].valid) + ' Dirty: ' + str(L3cache[i].dirty) + ' Tag: ' + str(L3cache[i].tag)
+    print '\n'
 
 # Output results
 L1hrate = (float(L1nHits)/L1nReads) * 100
