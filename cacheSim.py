@@ -86,9 +86,9 @@ if( args.L3 ):
 
 infile = open(fname, 'r')
 
-if( WB == True ):
-    print 'You can\'t do that'
-    exit()
+# if( WB == True ):
+#     print 'You can\'t do that'
+#     exit()
 
 addr = 0
 L1setAddr = 0
@@ -324,6 +324,7 @@ for line in infile:
                     L3cache[i].valid = 1
                     L3cache[i].tag = (addr >> int(L3wordShift + L3setShift + byteShift))
                     L3cache[i].lastAccess = time.time()
+                    L3cache[i].dirty = 0
                     L3found = True
                     L3nMisses += 1
                     if( type == 'W' and WT == True ):
@@ -345,8 +346,13 @@ for line in infile:
                 L3cache[oldest].tag = (addr >> int( L3wordShift + L3setShift + byteShift ) )
                 L3cache[oldest].lastAccess = time.time()
                 L3nMisses += 1
-                if( type == 'W' and WT == True ):
-                    L3nWrites += 1
+                if( type == 'W' ):
+                    if( WT == True ):
+                        L3nWrites += 1
+                    if( WB == True ):
+                        if( L3cache[oldest].dirty == 1):
+                            MMnWrites += 1
+                L3cache[oldest].dirty = 0
                 L3found = True
 
     ############################
@@ -364,6 +370,7 @@ for line in infile:
                     L2cache[i].valid = 1
                     L2cache[i].tag = (addr >> int(L2wordShift + L2setShift + byteShift))
                     L2cache[i].lastAccess = time.time()
+                    L2cache[i].dirty = 0
                     L2found = True
                     L2nMisses += 1
                     if( type == 'W' and WT == True ):
@@ -381,11 +388,33 @@ for line in infile:
                 if( debug == 1 ):
                     print 'Oldest L2 block found, data stored at: ' + str(oldest)
                 L2cache[oldest].valid = 1
+                minOldAddr = ( L2cache[oldest].tag << int( L2wordShift + L2setShift + byteShift ) )
+                maxOldAddr = ( minOldAddr | ((1 << (int( L2wordShift + L2setShift + byteShift ))) - 1))
+                if( debug == 1 ):
+                    print 'minOldAddr: ' + hex(minOldAddr)
+                    print 'maxOldAddr: ' + hex(maxOldAddr)
                 L2cache[oldest].tag = ( addr >> int( L2wordShift + L2setShift + byteShift ) )
                 L2cache[oldest].lastAccess = time.time()
                 L2nMisses += 1
-                if( type == 'W' and WT == True):
-                    L2nWrites += 1
+                if( type == 'W' ):
+                    if( WT == True ):
+                        L2nWrites += 1
+                    if( WB == True ):
+                        if( L2cache[oldest].dirty == 1):
+                            ## Write the dirty block to L3 if present
+                            if( numLevels == 2):
+                                MMnWrites += 1
+                            else:
+                                for i in range(L3startBlock, L3endBlock + 1):
+                                    minBlockAddr = ( L3cache[i].tag << int(L3wordShift + L3setShift + byteShift))
+                                    maxBlockAddr = ( minBlockAddr | ((1 << int( L3wordShift + L3setShift + byteShift)) - 1 ) )
+                                    if( minOldAddr >= minBlockAddr and maxOldAddr <= maxBlockAddr ):
+                                        if( L3cache[i].dirty == 1 ):
+                                            MMnWrites += 1
+                                        L3cache[i].dirty = 1
+                                        L3cache[i].lastAccess = time.time()
+                                        break
+                        L2cache[oldest].dirty = 0
                 L2found = True
 
     ############################
@@ -402,6 +431,7 @@ for line in infile:
                 L1cache[i].valid = 1
                 L1cache[i].tag = (addr >> int(L1wordShift + L1setShift + byteShift))
                 L1cache[i].lastAccess = time.time()
+                L1cache[i].dirty = 0
                 L1found = True
                 L1nMisses += 1
                 if( type == 'W' and WT == True):
@@ -416,15 +446,56 @@ for line in infile:
                 if( L1cache[i].lastAccess < oldTime ):
                     oldTime = L1cache[i].lastAccess
                     oldest = i
-                if( debug == 1 ):
-                    print 'Oldest L1 block found, data stored at: ' + str(oldest)
-                L1cache[oldest].valid = 1
-                L1cache[oldest].tag = ( addr >> int( L1wordShift + L1setShift + byteShift ) )
-                L1cache[oldest].lastAccess = time.time()
-                L1nMisses += 1
-                if( type == 'W' and WT == True):
+            if( debug == 1 ):
+                print 'Oldest L1 block found, data stored at: ' + str(oldest)
+            L1cache[oldest].valid = 1
+            minOldAddr = ( L1cache[oldest].tag << int( L1wordShift + L1setShift + byteShift ) )
+            maxOldAddr = ( minOldAddr | ((1 << (int( L1wordShift + L1setShift + byteShift ))) - 1))
+            L1cache[oldest].tag = ( addr >> int( L1wordShift + L1setShift + byteShift ) )
+            L1cache[oldest].lastAccess = time.time()
+            L1nMisses += 1
+            if( type == 'W' ):
+                if( WT == True ):
                     L1nWrites += 1
-                L1found = True
+                else:
+                    if( L1cache[oldest].dirty == 1 ):
+                        if( numLevels == 1 ):
+                            MMnWrites += 1
+                        elif( numLevels == 2 ):
+                            for i in range(L2startBlock, L2endBlock + 1 ):
+                                minBlockAddr = ( L2cache[i].tag << int(L2wordShift + L2setShift + byteShift))
+                                maxBlockAddr = ( minBlockAddr | ((1 << int( L2wordShift + L2setShift + byteShift)) - 1 ) )
+                                if( minOldAddr >= minBlockAddr and maxOldAddr <= maxBlockAddr ):
+                                    if( L2cache[i].dirty == 1 ):
+                                        MMnWrites += 1
+                                    L2cache[i].dirty = 1
+                                    L2cache[i].lastAccess = time.time()
+                                    break
+                        else:
+                            for i in range(L2startBlock, L2endBlock + 1 ):
+                                minBlockAddr = ( L2cache[i].tag << int(L2wordShift + L2setShift + byteShift))
+                                maxBlockAddr = ( minBlockAddr | ((1 << int( L2wordShift + L2setShift + byteShift)) - 1 ) )
+                                if( minOldAddr >= minBlockAddr and maxOldAddr <= maxBlockAddr ):
+                                    if( L2cache[i].dirty == 1):
+                                        minOldAddr = ( L2cache[i].tag << int( L2wordShift + L2setShift + byteShift ) )
+                                        maxOldAddr = ( minOldAddr | ((1 << (int( L2wordShift + L2setShift + byteShift ))) - 1))
+                                        for j in range(L3startBlock, L3endBlock + 1 ):
+                                            minBlockAddr = ( L3cache[j].tag << int(L3wordShift + L3setShift + byteShift))
+                                            maxBlockAddr = ( minBlockAddr | ((1 << int( L3wordShift + L3setShift + byteShift)) - 1 ) )
+                                            if( minOldAddr >= minBlockAddr and maxOldAddr <= maxBlockAddr ):
+                                                if( L3cache[j].dirty == 1 ):
+                                                    MMnWrites += 1
+                                                L3cache[j].dirty = 1
+                                                L3cache[j].lastAccess = time.time()
+                                                break
+                                    L2cache[i].dirty = 1
+                                    L2cache[i].lastAccess = time.time()
+                                    break
+
+                    L1cache[oldest].dirty = 1
+                    L1cache[oldest].lastAccess = time.time()
+
+            L1found = True
       
 if(debug == 1):
     print 'L1 Cache Contents:'
