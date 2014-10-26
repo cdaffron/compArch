@@ -23,13 +23,14 @@ parser.add_argument('--L2', nargs=4, type=int, required=False, metavar=('block_s
 parser.add_argument('--L3', nargs=4, type=int, required=False, metavar=('block_size','num_lines','associativity','hit_time'), help='L3 cache parameters')
 parser.add_argument('write_time', type=int)
 parser.add_argument('file_name', type=str)
+parser.add_argument('--debug', required=False, action='store_true')
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument('--WB', action='store_true')
 group.add_argument('--WT', action='store_true')
 args = parser.parse_args()
 
 # Flag to control output
-debug = 0
+debug = args.debug
 
 # Print out all the arguments
 if( debug == 1 ):
@@ -121,11 +122,6 @@ if( L1bSize != L2bSize or L1bSize != L3bSize ):
 # Open the file containing the cache reads and writes
 infile = open(fname, 'r')
 
-# if( WB == True ):
-#     print 'You can\'t do that'
-#     exit()
-
-
 # Calculate various cache values
 addr = 0
 L1setAddr = 0
@@ -196,23 +192,23 @@ counter = 0
 # Iterate through all the accesses
 for line in infile:
     counter += 1
-    if( L1nWrites != L2nWrites or L1nWrites != L3nWrites ):
-        print 'Different number of writes!!!'
-        print 'L1: ' + str(L1nWrites)
-        print 'L2: ' + str(L2nWrites)
-        print 'L3: ' + str(L3nWrites)
-        print 'Total: ' + str(totalWriteCmds)
-        raw_input('Press ENTER to continue...')
+    # if( L1nWrites != L2nWrites or L1nWrites != L3nWrites ): # for debug
+        # print 'Different number of writes!!!' # for debug
+        # print 'L1: ' + str(L1nWrites) # for debug
+        # print 'L2: ' + str(L2nWrites) # for debug
+        # print 'L3: ' + str(L3nWrites) # for debug
+        # print 'Total: ' + str(totalWriteCmds) # for debug
+        # raw_input('Press ENTER to continue...') # for debug
 
-    # for i in range(L1nBlocks):
-    #     if( L1cache[i].tag != L2cache[i].tag or L1cache[i].tag != L3cache[i].tag):
-    #         print 'Differences found!!!'
-    #         differences = True
-    #         break
-    # if( differences == True ):
-    #     break
-    # else:
-    #     print 'Caches are the same'
+    # for i in range(L1nBlocks): # for debug
+    #     if( L1cache[i].tag != L2cache[i].tag or L1cache[i].tag != L3cache[i].tag): # for debug
+    #         print 'Differences found!!!' # for debug
+    #         differences = True # for debug
+    #         break # for debug
+    # if( differences == True ): # for debug
+    #     break # for debug
+    # else: # for debug
+    #     print 'Caches are the same' # for debug
     separate = line.split()
     addr = int(separate[0], base=16)
     type = str(separate[1])
@@ -693,17 +689,17 @@ if( numLevels == 2 ):
     amat = L1hTime + (L1mrate / 100) * (L2hTime + (L2mrate / 100) * memTime)
 if( numLevels == 3 ):
     amat = L1hTime + (L1mrate / 100) * (L2hTime + (L2mrate / 100) * (L3hTime + (L3mrate / 100) * memTime))
-print 'L1 Reads: ' + str(L1nReads)
-print 'L1 Hits: ' + str(L1nHits)
-print 'L1 Misses: ' + str(L1nMisses)
-if( numLevels >= 2 ):
-    print 'L2 Reads: ' + str(L2nReads)
-    print 'L2 Hits: ' + str(L2nHits)
-    print 'L2 Misses: ' + str(L2nMisses)
-if( numLevels == 3 ):
-    print 'L3 Reads: ' + str(L3nReads)
-    print 'L3 Hits: ' + str(L3nHits)
-    print 'L3 Misses: ' + str(L3nMisses)
+# print 'L1 Reads: ' + str(L1nReads)
+# print 'L1 Hits: ' + str(L1nHits)
+# print 'L1 Misses: ' + str(L1nMisses)
+# if( numLevels >= 2 ):
+#     print 'L2 Reads: ' + str(L2nReads)
+#     print 'L2 Hits: ' + str(L2nHits)
+#     print 'L2 Misses: ' + str(L2nMisses)
+# if( numLevels == 3 ):
+#     print 'L3 Reads: ' + str(L3nReads)
+#     print 'L3 Hits: ' + str(L3nHits)
+#     print 'L3 Misses: ' + str(L3nMisses)
 print 'L1 Hit Rate: ' + str(L1hrate)
 print 'L1 Miss Rate: ' + str(L1mrate)
 if( numLevels >= 2 ):
@@ -712,11 +708,11 @@ if( numLevels >= 2 ):
 if( numLevels == 3 ):
     print 'L3 Hit Rate: ' + str(L3hrate)
     print 'L3 Miss Rate: ' + str(L3mrate)
-print 'AMAT: ' + str(amat)
-print '\nWrite Statistics:'
-print 'Total Write Commands: ' + str(totalWriteCmds)
-print 'L1 Writes: ' + str(L1nWrites)
-if( numLevels >= 2 ):
-    print 'L2 Writes: ' + str(L2nWrites)
-if( numLevels == 3 ):
-    print 'L3 Writes: ' + str(L3nWrites)
+print 'AMAT: ' + str(amat) + "\n\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n\n"
+# print '\nWrite Statistics:'
+# print 'Total Write Commands: ' + str(totalWriteCmds)
+# print 'L1 Writes: ' + str(L1nWrites)
+# if( numLevels >= 2 ):
+#     print 'L2 Writes: ' + str(L2nWrites)
+# if( numLevels == 3 ):
+#     print 'L3 Writes: ' + str(L3nWrites)
