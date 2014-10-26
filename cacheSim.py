@@ -29,7 +29,7 @@ group.add_argument('--WT', action='store_true')
 args = parser.parse_args()
 
 # Flag to control output
-debug = 1
+debug = 0
 
 # Print out all the arguments
 if( debug == 1 ):
