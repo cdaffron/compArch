@@ -236,17 +236,7 @@ for line in infile:
         print 'L1 Min Addr: ' + hex(L1minAddr) + ' Max Addr: ' + hex(L1maxAddr)
         print 'L1 Set Addr: ' + hex(L1setAddr)
 
-    # These are mainly notes for my brain :)
-    # Program flow for reads:
-    # Look for existing in L1
-    # If not, look for existing in L2
-    # If not, look for existing in L3
-    # If not, read from main memory
-    # Look for empty in L3. If not, do LRU
-    # Look for empty in L2. If not, do LRU
-    # Look for empty in L1. If not, do LRU
-    #
-    # Program Flow for write-through
+    # Program Flow for write-through:
     # Look for existing in L1
     #   If present, write to all levels
     # If not, look for existing in L2
@@ -256,7 +246,7 @@ for line in infile:
     # If not, write to main memory and load to all levels
     # ** Loading uses empty and then LRU **
     #
-    # Program Flow for write-back
+    # Program Flow for write-back:
     # Look for existing in L1
     #   If present, write to L1
     #   If already dirty, write to lower level, falling through as necessary
@@ -288,7 +278,7 @@ for line in infile:
                     L1found = True
                     L1nHits += 1
                     L1nWrites += 1
-                    print 'Write to L1!!!'
+                    # print 'Write to L1!!!'
                     if( WB == True ):
                         L1cache[i].dirty = 1
                     break

@@ -1,3 +1,5 @@
+import random
+
 f = open("readContinuous.txt", 'w')
 for x in xrange(0,1048576):
   f.write(hex(x).lstrip("0x").zfill(8) + " R\n")
@@ -98,4 +100,12 @@ for x in xrange(0,1048576):
       f.write(hex(x).lstrip("0x").zfill(8) + " R\n")
     else:
       f.write(hex(x).lstrip("0x").zfill(8) + " W\n")
+f.close
+
+f = open("random.txt", 'w')
+for x in xrange(1,1048576):
+  if random.randint(1, 2)%2==0:
+    f.write(hex(random.randrange(0,4294967296)).lstrip("0x").zfill(8) + " R\n")
+  else:
+    f.write(hex(random.randrange(0,4294967296)).lstrip("0x").zfill(8) + " W\n")
 f.close
