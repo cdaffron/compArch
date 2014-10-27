@@ -119,6 +119,7 @@ if( args.L3 ):
 # if( L1bSize != L2bSize or L1bSize != L3bSize ): # for debug
 #     print 'WARNING!!!\nUsing different block sizes for each level causes undetermined results.' # for debug
 #     raw_input('Press ENTER to continue...') # for debug
+
 # Open the file containing the cache reads and writes
 infile = open(fname, 'r')
 
