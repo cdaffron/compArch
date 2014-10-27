@@ -1,0 +1,204 @@
+Word Size: 4
+L1 Block Size:16
+L1 Number of Lines:16
+L1 Associativity: 1
+L2 Block Size:16
+L2 Number of Lines:32
+L2 Associativity: 1
+L3 Block Size:16
+L3 Number of Lines:64
+L3 Associativity: 1
+Write policy: write-back
+L1 Hit Rate: 99.9938964844
+L1 Miss Rate: 0.006103515625
+L2 Hit Rate: 0.0
+L2 Miss Rate: 100.0
+L3 Hit Rate: 0.0
+L3 Miss Rate: 100.0
+AMAT: 3.04272460938
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+Word Size: 4
+L1 Block Size:16
+L1 Number of Lines:16
+L1 Associativity: 1
+L2 Block Size:16
+L2 Number of Lines:32
+L2 Associativity: 1
+L3 Block Size:16
+L3 Number of Lines:64
+L3 Associativity: 1
+Write policy: write-through
+L1 Hit Rate: 99.9938964844
+L1 Miss Rate: 0.006103515625
+L2 Hit Rate: 0.0
+L2 Miss Rate: 100.0
+L3 Hit Rate: 0.0
+L3 Miss Rate: 100.0
+AMAT: 3.04272460938
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+Word Size: 4
+L1 Block Size:16
+L1 Number of Lines:16
+L1 Associativity: 2
+L2 Block Size:16
+L2 Number of Lines:32
+L2 Associativity: 2
+L3 Block Size:16
+L3 Number of Lines:64
+L3 Associativity: 2
+Write policy: write-back
+L1 Hit Rate: 99.9938964844
+L1 Miss Rate: 0.006103515625
+L2 Hit Rate: 0.0
+L2 Miss Rate: 100.0
+L3 Hit Rate: 0.0
+L3 Miss Rate: 100.0
+AMAT: 3.04272460938
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+Word Size: 4
+L1 Block Size:16
+L1 Number of Lines:16
+L1 Associativity: 2
+L2 Block Size:16
+L2 Number of Lines:32
+L2 Associativity: 2
+L3 Block Size:16
+L3 Number of Lines:64
+L3 Associativity: 2
+Write policy: write-through
+L1 Hit Rate: 99.9938964844
+L1 Miss Rate: 0.006103515625
+L2 Hit Rate: 0.0
+L2 Miss Rate: 100.0
+L3 Hit Rate: 0.0
+L3 Miss Rate: 100.0
+AMAT: 3.04272460938
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+Word Size: 4
+L1 Block Size:16
+L1 Number of Lines:16
+L1 Associativity: 4
+L2 Block Size:16
+L2 Number of Lines:32
+L2 Associativity: 4
+L3 Block Size:16
+L3 Number of Lines:64
+L3 Associativity: 4
+Write policy: write-back
+L1 Hit Rate: 99.9938964844
+L1 Miss Rate: 0.006103515625
+L2 Hit Rate: 0.0
+L2 Miss Rate: 100.0
+L3 Hit Rate: 0.0
+L3 Miss Rate: 100.0
+AMAT: 3.04272460938
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+Word Size: 4
+L1 Block Size:16
+L1 Number of Lines:16
+L1 Associativity: 4
+L2 Block Size:16
+L2 Number of Lines:32
+L2 Associativity: 4
+L3 Block Size:16
+L3 Number of Lines:64
+L3 Associativity: 4
+Write policy: write-through
+L1 Hit Rate: 99.9938964844
+L1 Miss Rate: 0.006103515625
+L2 Hit Rate: 0.0
+L2 Miss Rate: 100.0
+L3 Hit Rate: 0.0
+L3 Miss Rate: 100.0
+AMAT: 3.04272460938
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+Word Size: 4
+L1 Block Size:16
+L1 Number of Lines:16
+L1 Associativity: 1
+Write policy: write-back
+L1 Hit Rate: 99.9938964844
+L1 Miss Rate: 0.006103515625
+AMAT: 3.03051757812
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+Word Size: 4
+L1 Block Size:16
+L1 Number of Lines:16
+L1 Associativity: 1
+Write policy: write-through
+L1 Hit Rate: 99.9938964844
+L1 Miss Rate: 0.006103515625
+AMAT: 3.03051757812
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+Word Size: 4
+L1 Block Size:16
+L1 Number of Lines:16
+L1 Associativity: 2
+Write policy: write-back
+L1 Hit Rate: 99.9938964844
+L1 Miss Rate: 0.006103515625
+AMAT: 3.03051757812
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+Word Size: 4
+L1 Block Size:16
+L1 Number of Lines:16
+L1 Associativity: 2
+Write policy: write-through
+L1 Hit Rate: 99.9938964844
+L1 Miss Rate: 0.006103515625
+AMAT: 3.03051757812
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+Word Size: 4
+L1 Block Size:16
+L1 Number of Lines:16
+L1 Associativity: 4
+Write policy: write-back
+L1 Hit Rate: 99.9938964844
+L1 Miss Rate: 0.006103515625
+AMAT: 3.03051757812
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+Word Size: 4
+L1 Block Size:16
+L1 Number of Lines:16
+L1 Associativity: 4
+Write policy: write-through
+L1 Hit Rate: 99.9938964844
+L1 Miss Rate: 0.006103515625
+AMAT: 3.03051757812
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+

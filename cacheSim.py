@@ -16,17 +16,17 @@ class entry:
     lastAccess = 0
     
 ## Define and parse the arguments
-parser = argparse.ArgumentParser(description='cache simulator arguments')
-parser.add_argument('word_size', type=int)
+parser = argparse.ArgumentParser(description='Cache simulator arguments')
+parser.add_argument('word_size', type=int, help='Word size used for cache')
 parser.add_argument('--L1', nargs=4, type=int, required=True, metavar=('block_size','num_lines','associativity','hit_time'), help='L1 cache parameters')
 parser.add_argument('--L2', nargs=4, type=int, required=False, metavar=('block_size','num_lines','associativity','hit_time'), help='L2 cache parameters')
 parser.add_argument('--L3', nargs=4, type=int, required=False, metavar=('block_size','num_lines','associativity','hit_time'), help='L3 cache parameters')
-parser.add_argument('write_time', type=int)
-parser.add_argument('file_name', type=str)
-parser.add_argument('--debug', required=False, action='store_true')
+parser.add_argument('write_time', type=int, help='Write time to main memory')
+parser.add_argument('file_name', type=str, help='Path to trace file')
+parser.add_argument('--debug', required=False, action='store_true', help='Set verbose output')
 group = parser.add_mutually_exclusive_group(required=True)
-group.add_argument('--WB', action='store_true')
-group.add_argument('--WT', action='store_true')
+group.add_argument('--WB', action='store_true', help='Set write-back policy')
+group.add_argument('--WT', action='store_true', help='Set write-through policy')
 args = parser.parse_args()
 
 # Flag to control output
@@ -116,9 +116,9 @@ if( args.L3 ):
     L3hTime = args.L3[3]
     L3assoc = args.L3[2]
 
-if( L1bSize != L2bSize or L1bSize != L3bSize ):
-    print 'WARNING!!!\nUsing different block sizes for each level causes undetermined results.'
-    raw_input('Press ENTER to continue...')
+# if( L1bSize != L2bSize or L1bSize != L3bSize ): # for debug
+#     print 'WARNING!!!\nUsing different block sizes for each level causes undetermined results.' # for debug
+#     raw_input('Press ENTER to continue...') # for debug
 # Open the file containing the cache reads and writes
 infile = open(fname, 'r')
 
@@ -689,17 +689,33 @@ if( numLevels == 2 ):
     amat = L1hTime + (L1mrate / 100) * (L2hTime + (L2mrate / 100) * memTime)
 if( numLevels == 3 ):
     amat = L1hTime + (L1mrate / 100) * (L2hTime + (L2mrate / 100) * (L3hTime + (L3mrate / 100) * memTime))
-# print 'L1 Reads: ' + str(L1nReads)
-# print 'L1 Hits: ' + str(L1nHits)
-# print 'L1 Misses: ' + str(L1nMisses)
-# if( numLevels >= 2 ):
-#     print 'L2 Reads: ' + str(L2nReads)
-#     print 'L2 Hits: ' + str(L2nHits)
-#     print 'L2 Misses: ' + str(L2nMisses)
-# if( numLevels == 3 ):
-#     print 'L3 Reads: ' + str(L3nReads)
-#     print 'L3 Hits: ' + str(L3nHits)
-#     print 'L3 Misses: ' + str(L3nMisses)
+# print 'L1 Reads: ' + str(L1nReads) # for debug
+# print 'L1 Hits: ' + str(L1nHits) # for debug
+# print 'L1 Misses: ' + str(L1nMisses) # for debug
+# if( numLevels >= 2 ): # for debug
+#     print 'L2 Reads: ' + str(L2nReads) # for debug
+#     print 'L2 Hits: ' + str(L2nHits) # for debug
+#     print 'L2 Misses: ' + str(L2nMisses) # for debug
+# if( numLevels == 3 ): # for debug
+#     print 'L3 Reads: ' + str(L3nReads) # for debug
+#     print 'L3 Hits: ' + str(L3nHits) # for debug
+#     print 'L3 Misses: ' + str(L3nMisses) # for debug
+print 'Word Size: ' + str(wordSize)
+print 'L1 Block Size:' + str(L1bSize)
+print 'L1 Number of Lines:' + str(L1nBlocks)
+print 'L1 Associativity: ' + str(L1assoc)
+if args.L2:
+    print 'L2 Block Size:' + str(L2bSize)
+    print 'L2 Number of Lines:' + str(L2nBlocks)
+    print 'L2 Associativity: ' + str(L2assoc)
+if args.L3:
+    print 'L3 Block Size:' + str(L3bSize)
+    print 'L3 Number of Lines:' + str(L3nBlocks)
+    print 'L3 Associativity: ' + str(L3assoc)
+if (WT):
+    print 'Write policy: write-through'
+else:
+    print 'Write policy: write-back'
 print 'L1 Hit Rate: ' + str(L1hrate)
 print 'L1 Miss Rate: ' + str(L1mrate)
 if( numLevels >= 2 ):
@@ -709,10 +725,10 @@ if( numLevels == 3 ):
     print 'L3 Hit Rate: ' + str(L3hrate)
     print 'L3 Miss Rate: ' + str(L3mrate)
 print 'AMAT: ' + str(amat) + "\n\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n\n"
-# print '\nWrite Statistics:'
-# print 'Total Write Commands: ' + str(totalWriteCmds)
-# print 'L1 Writes: ' + str(L1nWrites)
-# if( numLevels >= 2 ):
-#     print 'L2 Writes: ' + str(L2nWrites)
-# if( numLevels == 3 ):
-#     print 'L3 Writes: ' + str(L3nWrites)
+# print '\nWrite Statistics:' # for debug
+# print 'Total Write Commands: ' + str(totalWriteCmds) # for debug
+# print 'L1 Writes: ' + str(L1nWrites) # for debug
+# if( numLevels >= 2 ): # for debug
+#     print 'L2 Writes: ' + str(L2nWrites) # for debug
+# if( numLevels == 3 ): # for debug
+#     print 'L3 Writes: ' + str(L3nWrites) # for debug
